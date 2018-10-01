@@ -224,7 +224,7 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
 
   if (executing != NULL){
     if (executing->prio < prio){
-        cyied();
+        cyield();
     }
   }
   return currentThreadsId;
