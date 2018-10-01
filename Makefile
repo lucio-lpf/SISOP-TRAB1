@@ -11,7 +11,7 @@
 #
 all: cthread.o
 	ar crs lib/libcthread.a bin/cthread.o bin/support.o
-cthread.o:
+cthread.o: include/cthread.h
 	gcc -c src/cthread.c -o bin/cthread.o
 clean:
 	rm bin/cthread.o lib/libcthread.a
