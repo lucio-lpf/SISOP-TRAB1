@@ -331,7 +331,7 @@ int cwait(csem_t *sem){
     //
     //     thread->state=PROCST_BLOQ;
     //
-    //     if(AppendFila2(sem->fila, (void *) thread){
+    //     if(AppendFila2(sem->fila, (void *) thread)){
     //         puts("Erro ao colocar a Thread na fila");
     //         return ERROR;
     //     }
@@ -345,7 +345,7 @@ int cwait(csem_t *sem){
 int csignal(csem_t *sem)
 {
     // int erro;
-    //
+    //TCB_t *thread;
     // sem->count++;
     //
     // if(sem->count < 0) //Há Threads bloqueadas
@@ -358,7 +358,7 @@ int csignal(csem_t *sem)
     //     }
     //     else
     //     {
-    //         TCB_t *thread;
+    //         
     //
     //         thread=(TCB_t *)GetAtIteratorFila2(sem->fila);
     //
@@ -370,7 +370,7 @@ int csignal(csem_t *sem)
     //             return ERROR;
     //         }
     //
-    //         else if(erro=DELITER_VAZIA)
+    //         else if(erro==DELITER_VAZIA)
     //         {
     //             puts("Lista Vazia");
     //             return ERROR;
