@@ -1,14 +1,4 @@
 #define _XOPEN_SOURCE 600
-
-//para funcionar uso de contextos no mac
-#ifdef _APPLE_
-    pthread_threadid_np(thread,&tcb.id)
-#else
-#ifdef unix
-
-#endif
-#endif
-
 #include "../include/cthread.h"
 #include "../include/cdata.h"
 #include "../include/support.h"
@@ -21,6 +11,15 @@
 #define LOW 2
 #define MEDIUM 1
 #define HIGH 0
+
+//para funcionar uso de contextos no mac
+#ifdef _APPLE_
+    pthread_threadid_np(thread,&tcb.id)
+#else
+#ifdef unix
+
+#endif
+#endif
 
 //filas e contextos globais
 int currentThreadsId;
@@ -112,7 +111,6 @@ int isBlocking(int tid) {
 }
 
 void* dispatcher(void* arg){
-
   while(1){
 
     if (executing != NULL){
@@ -154,6 +152,7 @@ void* dispatcher(void* arg){
 
 void createQueues(){
 
+  printf("CRIA QUEUES\n");
   apt_high = malloc(sizeof(PFILA2));
   CreateFila2(apt_high);
 
@@ -173,9 +172,13 @@ void createQueues(){
   getcontext(&(main_thread->context));
 
   main_thread->state = PROCST_EXEC;
+  executing = malloc(sizeof(TCB_t));
   executing = main_thread;
+  printf("%d\n",executing->tid);
 
   currentThreadsId = 0;
+
+  getcontext(&dispatcher_cntx);
 
   dispatcher_cntx.uc_link = 0;
   dispatcher_cntx.uc_stack.ss_sp = malloc (8*1024);
@@ -190,6 +193,7 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
 
 // caso seja inicio do programa e as filas nao tenham sido inicializadas
   if (apt_high == NULL){
+    printf("entra na criacao de filas\n");
     createQueues();
   }
 
@@ -214,16 +218,13 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
 
   makecontext(&childcontext, (void(*)(void)) start, 1, arg);
 
-  appendToRightQueue(thread);
   thread->state = PROCST_APTO;
   thread->context=childcontext;
+  appendToRightQueue(thread);
+
   if (executing != NULL){
     if (executing->prio < prio){
-      TCB_t *last_executing = executing;
-      last_executing->state = PROCST_APTO;
-      appendToRightQueue(last_executing);
-      executing = NULL;
-      swapcontext(&(last_executing->context), &dispatcher_cntx);
+        cyied();
     }
   }
   return currentThreadsId;
@@ -256,7 +257,7 @@ int csetprio(int tid, int prio){
   switch (prio) {
     case HIGH:
       if (FirstFila2(apt_high)){
-        InsertBeforeIteratorFila2(last_executing);
+        InsertBeforeIteratorFila2(apt_high, last_executing);
       }
       else{
         appendToRightQueue(last_executing);
@@ -264,7 +265,7 @@ int csetprio(int tid, int prio){
       break;
     case MEDIUM:
       if (FirstFila2(apt_medium)){
-        InsertBeforeIteratorFila2(last_executing);
+        InsertBeforeIteratorFila2(apt_medium, last_executing);
       }
       else{
         appendToRightQueue(last_executing);
@@ -272,7 +273,7 @@ int csetprio(int tid, int prio){
       break;
     case LOW:
       if (FirstFila2(apt_low)){
-        InsertBeforeIteratorFila2(last_executing);
+        InsertBeforeIteratorFila2(apt_low, last_executing);
       }
       else{
         appendToRightQueue(last_executing);
@@ -291,9 +292,7 @@ int cjoin(int tid){
    }
 
    TCB_t *last_executing = executing;
-
    executing = NULL;
-
    last_executing->state = 3;
 
    block *blocked_thread = malloc(sizeof(block));
