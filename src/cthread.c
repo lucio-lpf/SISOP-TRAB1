@@ -222,11 +222,8 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
   thread->context=childcontext;
   appendToRightQueue(thread);
 
-  printf("verifica prioridade\n");
   if (executing != NULL){
-    printf("executing não é null e tem id: %d\n", executing->tid);
     if (executing->prio > prio){
-      printf("troca prioriadade %d\n", currentThreadsId);
       cyield();
     }
   }
@@ -246,44 +243,18 @@ int cyield(void){
 }
 
 int csetprio(int tid, int prio){
-
-  if (executing->tid != tid){
-    printf("Proibido alterar priodidade de outra thread ou de tid inexistente");
-    return ERROR;
+  if (executing->prio == prio){
+    return 0;
   }
   TCB_t *last_executing = executing;
   executing = NULL;
 
   last_executing->state = PROCST_APTO;
   last_executing->prio = prio;
+  appendToRightQueue(last_executing);
 
-  switch (prio) {
-    case HIGH:
-      if (FirstFila2(apt_high)){
-        InsertBeforeIteratorFila2(apt_high, last_executing);
-      }
-      else{
-        appendToRightQueue(last_executing);
-      }
-      break;
-    case MEDIUM:
-      if (FirstFila2(apt_medium)){
-        InsertBeforeIteratorFila2(apt_medium, last_executing);
-      }
-      else{
-        appendToRightQueue(last_executing);
-      }
-      break;
-    case LOW:
-      if (FirstFila2(apt_low)){
-        InsertBeforeIteratorFila2(apt_low, last_executing);
-      }
-      else{
-        appendToRightQueue(last_executing);
-      }
-      break;
-  }
   swapcontext(&(last_executing->context), &dispatcher_cntx);
+
   return 0;
 }
 
