@@ -222,16 +222,19 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
   thread->context=childcontext;
   appendToRightQueue(thread);
 
+  printf("verifica prioridade\n");
   if (executing != NULL){
-    if (executing->prio < prio){
-        cyield();
+    printf("executing não é null e tem id: %d\n", executing->tid);
+    if (executing->prio > prio){
+      printf("troca prioriadade %d\n", currentThreadsId);
+      cyield();
     }
   }
   return currentThreadsId;
 }
 
 int cyield(void){
-
+  printf("CYIELD\n");
   TCB_t *last_executing = executing;
   executing = NULL;
 
@@ -286,6 +289,7 @@ int csetprio(int tid, int prio){
 
 int cjoin(int tid){
   if (getThread(tid) == NULL) {
+      printf("Threads não encontradas ou finalizadas\n");
        return ERROR;
    } else if (isBlocking(tid)) {
        return ERROR;
@@ -313,84 +317,76 @@ int csem_init(csem_t *sem, int count)
     if(CreateFila2(sem->fila))
     {
         puts("Erro ao inicializar fila");
-        return -1;
+        return ERROR;
     }
 
     return 0;
 }
 
-int cwait(csem_t *sem)
-{
-    sem->count--;
-
-    if(sem->count <=0) //Não ha rercurso disponivel
-    {
-        TCB_t *thread = executing;
-
-        thread->state=PROCST_BLOQ;
-
-        if(AppendFila2(sem->fila, (void) thread)
-        {
-            puts("Erro ao colocar a Thread na fila");
-
-            return -1;
-        }
-
-        executing=NULL;
-    }
-
-    else
-        puts("Recurso disponivel");
-
+int cwait(csem_t *sem){
+    // sem->count--;
+    //  //Não ha rercurso disponivel
+    // if(sem->count <=0){
+    //     TCB_t *thread = executing;
+    //
+    //     thread->state=PROCST_BLOQ;
+    //
+    //     if(AppendFila2(sem->fila, (void *) thread){
+    //         puts("Erro ao colocar a Thread na fila");
+    //         return ERROR;
+    //     }
+    //     executing = NULL;
+    // }
+    // else puts("Recurso disponivel");
     return 0;
 }
 
 
 int csignal(csem_t *sem)
 {
-    int erro;
-
-    sem->count++;
-
-    if(sem->count < 0) //Há Threads bloqueadas
-    {
-        if (FirstFila2(sem->fila))
-        {
-            puts("Erro ao setar o iterador para o primeiro elemento");
-
-            return -1;
-        }
-        else
-        {
-            TCB_t *thread;
-
-            thread=(TCB_t *)GetAtIteratorFila2(sem->fila);
-
-            erro=DeleteAtIteratorFila2(sem->fila);
-
-            if(erro==DELITER_INVAL)
-            {
-                puts("Iterador invalido");
-                return -1
-            }
-
-            else if(erro=DELITER_VAZIA)
-            {
-                puts("Lista Vazia");
-                return -1;
-            }
-
-        }
-
-        thread->state=PROCST_APTO;
-    }
-
-    else
-        puts("Nao ha Threads bloquadas");
-
-    return 0;
+    // int erro;
+    //
+    // sem->count++;
+    //
+    // if(sem->count < 0) //Há Threads bloqueadas
+    // {
+    //     if (FirstFila2(sem->fila))
+    //     {
+    //         puts("Erro ao setar o iterador para o primeiro elemento");
+    //
+    //         return ERROR;
+    //     }
+    //     else
+    //     {
+    //         TCB_t *thread;
+    //
+    //         thread=(TCB_t *)GetAtIteratorFila2(sem->fila);
+    //
+    //         erro=DeleteAtIteratorFila2(sem->fila);
+    //
+    //         if(erro==DELITER_INVAL)
+    //         {
+    //             puts("Iterador invalido");
+    //             return ERROR;
+    //         }
+    //
+    //         else if(erro=DELITER_VAZIA)
+    //         {
+    //             puts("Lista Vazia");
+    //             return ERROR;
+    //         }
+    //
+    //     }
+    //
+    //     thread->state=PROCST_APTO;
+    // }
+    //
+    // else
+    //     puts("Nao ha Threads bloquadas");
+    //
+     return 0;
 }
-	   
+
 int cidentify (char *name, int size) {
 	strncpy (name, " Jady Feijo - 00230210 \n Lucio Franco - 00252867;", size);
 	return 0;

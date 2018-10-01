@@ -14,20 +14,22 @@
 
 void* func0(void *arg) {
 	printf("Eu sou a thread ID0 imprimindo %d\n", *((int *)arg));
+
 	return NULL;
 }
 
 void* func1(void *arg) {
 	printf("Eu sou a thread ID1 imprimindo %d\n", *((int *)arg));
+	return NULL;
 }
 
 int main(int argc, char *argv[]) {
 
 	int	id0, id1;
-	int i;
+	int i = 10;
 
-	id0 = ccreate(func0, (void *)&i, 1);
-	id1 = ccreate(func1, (void *)&i, 0);
+	id0 = ccreate(func0, (void *)&i, 2);
+	id1 = ccreate(func1, (void *)&i, 1);
 	printf("%d\n",id0);
 	printf("Eu sou a main ap�s a cria��o de ID0 e ID1\n");
 
