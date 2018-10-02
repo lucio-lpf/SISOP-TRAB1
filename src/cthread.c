@@ -224,6 +224,7 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
 
   if (executing != NULL){
     if (executing->prio > prio){
+      printf("Libera execucao pra thread prioritaria\n");
       cyield();
     }
   }
@@ -243,6 +244,12 @@ int cyield(void){
 }
 
 int csetprio(int tid, int prio){
+  
+  if(prio < HIGH || prio > LOW ){
+    printf("Prioridade invalida. Escolha um valor entre 0 e 2");
+    return ERROR;
+  }
+
   if (executing->prio == prio){
     return 0;
   }
@@ -329,7 +336,7 @@ int csignal(csem_t *sem)
     //     }
     //     else
     //     {
-    //         
+    //
     //
     //         thread=(TCB_t *)GetAtIteratorFila2(sem->fila);
     //
