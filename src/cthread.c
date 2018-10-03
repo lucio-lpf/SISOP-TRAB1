@@ -173,7 +173,6 @@ void createQueues(){
   main_thread->state = PROCST_EXEC;
   executing = malloc(sizeof(TCB_t));
   executing = main_thread;
-  printf("%d\n",executing->tid);
 
   currentThreadsId = 0;
 
@@ -288,6 +287,9 @@ int cjoin(int tid){
 }
 
 int csem_init(csem_t *sem, int count){
+    if (apt_high == NULL){
+      createQueues();
+    }
     sem->count = count;
     sem->fila = (PFILA2) malloc(sizeof(PFILA2));
     CreateFila2(sem->fila);
@@ -295,6 +297,9 @@ int csem_init(csem_t *sem, int count){
 }
 
 int cwait(csem_t *sem){
+    if (apt_high == NULL){
+      createQueues();
+    }
     if (sem == NULL){
       return ERROR;
     }
@@ -315,6 +320,10 @@ int cwait(csem_t *sem){
 
 int csignal(csem_t *sem){
 
+  if (apt_high == NULL){
+    createQueues();
+  }
+
   if (sem == NULL){
     return ERROR;
   }
@@ -329,13 +338,8 @@ int csignal(csem_t *sem){
 
       thread->state=PROCST_APTO;
       appendToRightQueue(thread);
-      TCB_t *last_executing = executing;
-
       if (executing->prio > thread->prio){
-        executing = NULL;
-        last_executing->state = PROCST_APTO;
-        appendToRightQueue(last_executing);
-        swapcontext(&(last_executing->context), &dispatcher_cntx);
+        cyield();
       }
     }
     else return 0;
