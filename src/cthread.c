@@ -152,7 +152,6 @@ void* dispatcher(void* arg){
 
 void createQueues(){
 
-  printf("CRIA QUEUES\n");
   apt_high = malloc(sizeof(PFILA2));
   CreateFila2(apt_high);
 
@@ -193,12 +192,10 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
 
 // caso seja inicio do programa e as filas nao tenham sido inicializadas
   if (apt_high == NULL){
-    printf("entra na criacao de filas\n");
     createQueues();
   }
 
   if(prio < HIGH || prio > LOW ){
-    printf("Prioridade invalida. Escolha um valor entre 0 e 2");
     return ERROR;
   }
 
@@ -224,7 +221,6 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
 
   if (executing != NULL){
     if (executing->prio > prio){
-      printf("Libera execucao pra thread prioritaria\n");
       cyield();
     }
   }
@@ -232,7 +228,9 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
 }
 
 int cyield(void){
-  printf("CYIELD\n");
+  if (apt_high == NULL){
+    createQueues();
+  }
   TCB_t *last_executing = executing;
   executing = NULL;
 
@@ -244,9 +242,11 @@ int cyield(void){
 }
 
 int csetprio(int tid, int prio){
-  
+
+  if (apt_high == NULL){
+    createQueues();
+  }
   if(prio < HIGH || prio > LOW ){
-    printf("Prioridade invalida. Escolha um valor entre 0 e 2");
     return ERROR;
   }
 
@@ -267,7 +267,6 @@ int csetprio(int tid, int prio){
 
 int cjoin(int tid){
   if (getThread(tid) == NULL) {
-      printf("Threads não encontradas ou finalizadas\n");
        return ERROR;
    } else if (isBlocking(tid)) {
        return ERROR;
@@ -288,80 +287,75 @@ int cjoin(int tid){
    return 0;
 }
 
-int csem_init(csem_t *sem, int count)
-{
-    sem->count=count;
-
-    if(CreateFila2(sem->fila))
-    {
-        puts("Erro ao inicializar fila");
-        return ERROR;
-    }
-
+int csem_init(csem_t *sem, int count){
+    sem->count = count;
+    sem->fila = (PFILA2) malloc(sizeof(PFILA2));
+    CreateFila2(sem->fila);
     return 0;
 }
 
 int cwait(csem_t *sem){
-    // sem->count--;
-    //  //Não ha rercurso disponivel
-    // if(sem->count <=0){
-    //     TCB_t *thread = executing;
-    //
-    //     thread->state=PROCST_BLOQ;
-    //
-    //     if(AppendFila2(sem->fila, (void *) thread)){
-    //         puts("Erro ao colocar a Thread na fila");
-    //         return ERROR;
-    //     }
-    //     executing = NULL;
-    // }
-    // else puts("Recurso disponivel");
+    if (sem == NULL){
+      return ERROR;
+    }
+    if(sem->count <=0){
+        TCB_t *thread = executing;
+        executing = NULL;
+        thread->state=PROCST_BLOQ;
+
+        if(AppendFila2(sem->fila, (void *) thread)){
+            return ERROR;
+        }
+        swapcontext(&thread->context, &dispatcher_cntx);
+    }
+    sem->count--;
     return 0;
 }
 
 
-int csignal(csem_t *sem)
-{
-    // int erro;
-    //TCB_t *thread;
-    // sem->count++;
-    //
-    // if(sem->count < 0) //Há Threads bloqueadas
-    // {
-    //     if (FirstFila2(sem->fila))
-    //     {
-    //         puts("Erro ao setar o iterador para o primeiro elemento");
-    //
-    //         return ERROR;
-    //     }
-    //     else
-    //     {
-    //
-    //
-    //         thread=(TCB_t *)GetAtIteratorFila2(sem->fila);
-    //
-    //         erro=DeleteAtIteratorFila2(sem->fila);
-    //
-    //         if(erro==DELITER_INVAL)
-    //         {
-    //             puts("Iterador invalido");
-    //             return ERROR;
-    //         }
-    //
-    //         else if(erro==DELITER_VAZIA)
-    //         {
-    //             puts("Lista Vazia");
-    //             return ERROR;
-    //         }
-    //
-    //     }
-    //
-    //     thread->state=PROCST_APTO;
-    // }
-    //
-    // else
-    //     puts("Nao ha Threads bloquadas");
-    //
+int csignal(csem_t *sem){
+
+  if (sem == NULL){
+    return ERROR;
+  }
+    int erro;
+    TCB_t *thread;
+    sem->count++;
+
+    if(sem->count < 0) //Há Threads bloqueadas
+    {
+        if (FirstFila2(sem->fila))
+        {
+            puts("Erro ao setar o iterador para o primeiro elemento");
+
+            return ERROR;
+        }
+        else
+        {
+            thread=(TCB_t *)GetAtIteratorFila2(sem->fila);
+
+            erro=DeleteAtIteratorFila2(sem->fila);
+
+            if(erro==DELITER_INVAL)
+            {
+                puts("Iterador invalido");
+                return ERROR;
+            }
+
+            else if(erro==DELITER_VAZIA)
+            {
+                puts("Lista Vazia");
+                return ERROR;
+            }
+
+        }
+
+        thread->state=PROCST_APTO;
+    }
+
+    else
+        puts("Nao ha Threads bloquadas");
+
      return 0;
 }
 
