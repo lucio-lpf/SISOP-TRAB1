@@ -298,6 +298,7 @@ int cwait(csem_t *sem){
     if (sem == NULL){
       return ERROR;
     }
+    sem->count--;
     if(sem->count <=0){
         TCB_t *thread = executing;
         executing = NULL;
@@ -308,7 +309,6 @@ int cwait(csem_t *sem){
         }
         swapcontext(&thread->context, &dispatcher_cntx);
     }
-    sem->count--;
     return 0;
 }
 
@@ -318,45 +318,27 @@ int csignal(csem_t *sem){
   if (sem == NULL){
     return ERROR;
   }
-    int erro;
+  sem->count++;
     TCB_t *thread;
-    sem->count++;
 
     if(sem->count < 0) //Há Threads bloqueadas
     {
-        if (FirstFila2(sem->fila))
-        {
-            puts("Erro ao setar o iterador para o primeiro elemento");
+      FirstFila2(sem->fila);
+      thread=(TCB_t *)GetAtIteratorFila2(sem->fila);
+      DeleteAtIteratorFila2(sem->fila);
 
-            return ERROR;
-        }
-        else
-        {
-            thread=(TCB_t *)GetAtIteratorFila2(sem->fila);
+      thread->state=PROCST_APTO;
+      appendToRightQueue(thread);
+      TCB_t *last_executing = executing;
 
-            erro=DeleteAtIteratorFila2(sem->fila);
-
-            if(erro==DELITER_INVAL)
-            {
-                puts("Iterador invalido");
-                return ERROR;
-            }
-
-            else if(erro==DELITER_VAZIA)
-            {
-                puts("Lista Vazia");
-                return ERROR;
-            }
-
-        }
-
-        thread->state=PROCST_APTO;
+      if (executing->prio > thread->prio){
+        executing = NULL;
+        last_executing->state = PROCST_APTO;
+        appendToRightQueue(last_executing);
+        swapcontext(&(last_executing->context), &dispatcher_cntx);
+      }
     }
-
-    else
-        puts("Nao ha Threads bloquadas");
-
-     return 0;
+    else return 0;
 }
 
 int cidentify (char *name, int size) {
