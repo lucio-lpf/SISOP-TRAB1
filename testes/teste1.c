@@ -1,5 +1,6 @@
-
+//BASEADO NO TESTE DO COLEGA DE INTITUTO ARTHUR VEDANA
 #include "../include/cthread.h"
+#include "../include/support.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,7 +37,7 @@ int main(int argc, char **argv) {
 
 	int i;
 	for (i = 0; i < 10; i++) {
-		ids[i] = ccreate(func, (void *)&ids[i], 2);
+		ids[i] = ccreate(func, (void *)&ids[i], 1);
 		if (ids[i] < 0)
 			printf("Erro criando thread %02d, fechando.", i);
 		else // imprime i + 1 pois a thread 0 é a main
